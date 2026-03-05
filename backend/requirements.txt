@@ -1,0 +1,9 @@
+Flask
+Flask-CORS
+Flask-SQLAlchemy
+Flask-JWT-Extended
+Authlib
+bcrypt
+requests
+gunicorn
+python-dotenv
