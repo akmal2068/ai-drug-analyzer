@@ -2,177 +2,78 @@
 <html>
 
 <head>
-    <title>AI Medicine Analyzer</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #f4f6f9;
-            text-align: center;
-        }
-        
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 20px auto;
-            width: 400px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        input,
-        button {
-            padding: 10px;
-            margin: 5px;
-            width: 85%;
-        }
-        
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        
-        button:hover {
-            background: #0056b3;
-        }
-        
-        .google-btn {
-            background: #db4437;
-        }
-        
-        .google-btn:hover {
-            background: #b23121;
-        }
-    </style>
+    <title>AI Drug Analyzer</title>
 </head>
 
 <body>
+    <h2>Register</h2>
+    <input id="reg_user" placeholder="Username">
+    <input id="reg_email" placeholder="Email">
+    <input id="reg_pass" type="password" placeholder="Password">
+    <button onclick="register()">Register</button>
 
-    <h1>AI Medicine Analyzer</h1>
+    <h2>Login</h2>
+    <input id="login_email" placeholder="Email">
+    <input id="login_pass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
 
-    <!-- REGISTER -->
-    <div class="card">
-        <h3>Register</h3>
-        <input type="text" id="regUsername" placeholder="Username">
-        <input type="email" id="regEmail" placeholder="Email">
-        <input type="password" id="regPassword" placeholder="Password">
-        <button onclick="register()">Register</button>
-    </div>
+    <h2>Search Drug</h2>
+    <input id="drug_name" placeholder="Drug Name">
+    <button onclick="searchDrug()">Search</button>
 
-    <!-- LOGIN -->
-    <div class="card">
-        <h3>Login</h3>
-        <input type="text" id="loginUsername" placeholder="Username">
-        <input type="password" id="loginPassword" placeholder="Password">
-        <button onclick="login()">Login</button>
-        <button class="google-btn" onclick="googleLogin()">Login with Google</button>
-    </div>
-
-    <!-- DRUG SEARCH -->
-    <div class="card">
-        <h3>Search Drug</h3>
-        <input type="text" id="drugInput" placeholder="Enter Drug Name">
-        <button onclick="searchDrug()">Search</button>
-        <div id="result"></div>
-    </div>
-
-    <!-- HISTORY -->
-    <div class="card">
-        <h3>Your Search History</h3>
-        <button onclick="getHistory()">View History</button>
-        <div id="history"></div>
-    </div>
+    <pre id="result"></pre>
 
     <script>
         const BASE_URL = "http://127.0.0.1:5000";
 
-        function register() {
-            fetch(BASE_URL + "/register", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        username: document.getElementById("regUsername").value,
-                        email: document.getElementById("regEmail").value,
-                        password: document.getElementById("regPassword").value
-                    })
+        async function register() {
+            await fetch(BASE_URL + "/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: reg_user.value,
+                    email: reg_email.value,
+                    password: reg_pass.value
                 })
-                .then(res => res.json())
-                .then(data => alert(data.message));
+            });
+            alert("Registered!");
         }
 
-        function login() {
-            fetch(BASE_URL + "/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        username: document.getElementById("loginUsername").value,
-                        password: document.getElementById("loginPassword").value
-                    })
+        async function login() {
+            const res = await fetch(BASE_URL + "/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: login_email.value,
+                    password: login_pass.value
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.token) {
-                        localStorage.setItem("token", data.token);
-                        alert("Login Successful!");
-                    } else {
-                        alert("Login Failed");
-                    }
-                });
+            });
+
+            const data = await res.json();
+            localStorage.setItem("token", data.token);
+            alert("Logged in!");
         }
 
-        function googleLogin() {
-            window.location.href = BASE_URL + "/google-login";
-        }
-
-        function searchDrug() {
-            const token = localStorage.getItem("token");
-
-            fetch(BASE_URL + "/drug-info", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + token
-                    },
-                    body: JSON.stringify({
-                        drug: document.getElementById("drugInput").value
-                    })
+        async function searchDrug() {
+            const res = await fetch(BASE_URL + "/drug-info", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem("token")
+                },
+                body: JSON.stringify({
+                    drug: drug_name.value
                 })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("result").innerHTML =
-                        `<p><b>Name:</b> ${data.name}</p>
-             <p><b>Description:</b> ${data.description}</p>
-             <p><b>Uses:</b> ${data.uses}</p>
-             <p><b>Side Effects:</b> ${data.side_effects}</p>
-             <p><b>Dosage:</b> ${data.dosage}</p>`;
-                });
-        }
+            });
 
-        function getHistory() {
-            const token = localStorage.getItem("token");
-
-            fetch(BASE_URL + "/history", {
-                    method: "GET",
-                    headers: {
-                        "Authorization": "Bearer " + token
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    let output = "";
-                    data.forEach(item => {
-                        output += `<p>${item.drug} - ${item.time}</p>`;
-                    });
-                    document.getElementById("history").innerHTML = output;
-                });
+            const data = await res.json();
+            result.textContent = JSON.stringify(data, null, 2);
         }
     </script>
-
 </body>
 
 </html>
